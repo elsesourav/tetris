@@ -1,3 +1,6 @@
+cssRoot.style.setProperty("--ww", `${window.innerWidth}px`);
+cssRoot.style.setProperty("--wh", `${window.innerHeight}px`);
+
 const contaner = document.getElementById("contaner");
 
 // addjust size for every device
