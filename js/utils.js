@@ -18,6 +18,12 @@ Math.rnd = (start = 0, end = 1, int_floor = false) => {
 Math.map = (point, start, end, min, max) => {
     return ((max - min) * (point - start) / (end - start)) + min;
 }
+Math.toRad = (deg) => {
+    return deg * Math.PI / 180;
+}
+Math.toDeg = (red) => {
+    return red * 180 / Math.PI;
+}
 
 class Animation {
     constructor(fps) {

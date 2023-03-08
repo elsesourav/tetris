@@ -1,63 +1,73 @@
 class Pice {
-    constructor({ ctx, game, x, y, scale, ptn = pattern, vx = 3, vy = 1 }) {
+    constructor({ ctx, game, x, y, scale, ptn = pattern }) {
         this.ctx = ctx;
         this.game = game;
+        this.size = scale;
+
         this.x = x;
         this.y = y;
         this.tx = this.x;
         this.ty = this.y;
-        this.cx = 0;
-        this.cy = 0;
-        this.count = 0;
-        this.vx = vx;
-        this.vy = vy;
-        this.scale = scale;
+        this.dx = 0;
+        this.dy = 0;
+        this.vx = 0;
+        this.vy = 1;
+        this.a = 0; // angle
+        this.da = 0;
+        this.va = 1;
+        this.ta = this.a;
 
         this.ptn = ptn[Math.floor(Math.random() * ptn.length)];
         this.ci = Math.floor(Math.random() * 4); // curren index
         this.points = [];
         this.color = `hsl(${Math.round(Math.random() * 360)}, 100%, 50%)`
         this.#setPoint();
-        console.log(this.points);
-
     }
 
     rotate() {
-        let ti = (this.ci + 1) % 4;
-        this.#setPoint(ti);
+        this.ta = (this.a + 90) % 360;
 
-        let extra = 0;
-        // calclute extra bundary outside or not
-        this.points.forEach(point => {
-            let left = this.x + point[0];
-            let right = ((this.x + point[0]) - this.game.cols) + 1;
 
-            if (left < 0 && Math.abs(extra) < Math.abs(left)) {
-                extra = left;
-            } else if (right > 0 && Math.abs(extra) < Math.abs(right)) {
-                extra = right;
-            }
-        });
 
-        const isColide = this.points.some(point =>
-            this.game.placePices.some((pp, i) =>
-                pp.some(p =>
-                    this.x + point[0] == p && this.y + point[1] == i
-                )
-            )
-        );
-
-        if (extra && !isColide) {
-            this.ci = ti;
-            this.tx -= extra;
-            this.#rotateAnimation();
-        } else if (!isColide) {
-            this.ci = ti;
-            this.#rotateAnimation();
-        } else {
-            this.#setPoint();
-        }
+        console.log(this.ta);
     }
+
+    // rotate() {
+    //     let ti = (this.ci + 1) % 4;
+    //     this.#setPoint(ti);
+
+    //     let extra = 0;
+    //     // calclute extra bundary outside or not
+    //     this.points.forEach(point => {
+    //         let left = this.x + point[0];
+    //         let right = ((this.x + point[0]) - this.game.cols) + 1;
+
+    //         if (left < 0 && Math.abs(extra) < Math.abs(left)) {
+    //             extra = left;
+    //         } else if (right > 0 && Math.abs(extra) < Math.abs(right)) {
+    //             extra = right;
+    //         }
+    //     });
+
+    //     const isColide = this.points.some(point =>
+    //         this.game.placePices.some((pp, i) =>
+    //             pp.some(p =>
+    //                 this.x + point[0] == p && this.y + point[1] == i
+    //             )
+    //         )
+    //     );
+
+    //     if (extra && !isColide) {
+    //         this.ci = ti;
+    //         this.tx -= extra;
+    //         this.#rotateAnimation();
+    //     } else if (!isColide) {
+    //         this.ci = ti;
+    //         this.#rotateAnimation();
+    //     } else {
+    //         this.#setPoint();
+    //     }
+    // }
 
     #rotateAnimation() {
 
@@ -68,11 +78,11 @@ class Pice {
         this.ptn[index].forEach((cols, i) => {
             cols.forEach((element, j) => {
                 if (element) this.points.push(new Point({
-                    x: j + this.x,
-                    y: i + this.y,
+                    x: j - 2,
+                    y: i - 2,
                     ctx: this.ctx,
                     pice: this,
-                    size: this.scale,
+                    size: this.size,
                     color: this.color
                 }));
             }
@@ -82,30 +92,46 @@ class Pice {
 
     draw() {
         this.points.forEach(point => {
-            point.draw(this.x * this.scale + this.cx, this.y * this.scale + this.cy);
+            point.draw(this.x * this.size + this.dx, this.y * this.size + this.dy);
         })
     }
 
     update() {
+        const NUM_OF_MOVE_X = 3;
 
-        this.points.forEach(e => e.update(true))
-        // this.cy += this.vy;
-        // if (this.cy > this.scale) this.cy = 0;
-        // if (!this.cy) {
-        //     this.y++;
-        //     this.ty = this.y;
-        // }
+        // for rotation
+        if (this.a != this.ta) {
 
+            for (let i = 0; i < NUM_OF_MOVE_X; i++) {
+                this.da = (this.da + this.va) % 90;
+                if (!this.da) { this.a = this.ta; }
+            }
+        }
 
-        // // this.y += (this.ty - this.y) * 0.1;
-        // if (this.tx != this.x) {
-        //     const dir = this.tx - this.x > 0 ? 1 : -1;
+        // for move y
+        this.dy += this.vy;
+        if (this.dy > this.size) this.dy = 0;
+        if (!this.dy) {
+            this.y++;
+            this.ty = this.y;
+        }
 
-        //     this.cx = (this.cx + this.vx * (dir)) % this.scale;
-        //     if (!this.cx) {
-        //         this.x = this.tx;
-        //     }
-        // }
+        // for move x
+        if (this.tx != this.x) {
+            this.vx = this.tx - this.x > 0 ? 1 : -1;
+
+            for (let i = 0; i < NUM_OF_MOVE_X; i++) {
+                this.dx = (this.dx + this.vx) % this.size;
+                if (!this.dx) { this.x = this.tx; }
+            }
+        }
+
+        // update every pice x, y location        
+        this.points.forEach(e => {
+            e.piceX = (this.x * this.size) + this.dx;
+            e.piceY = (this.y * this.size) + this.dy;
+            e.angle = this.a + this.da;
+        })
     }
 
     /* ---- check collusion detection ---- */

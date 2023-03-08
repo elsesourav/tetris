@@ -11,10 +11,12 @@ const WIDTH = isWidth ? min : window.innerHeight * 0.5;
 const HEIFHT = isWidth ? window.innerHeight * 0.5 : min;
 const MARGIN = min * 0.04;
 
+
+
+
 const FPS = 60;
 const ani = new Animation(FPS);
 const game = new Game(contaner, WIDTH - MARGIN, ani);
-
 ani.start(loop);
 
 

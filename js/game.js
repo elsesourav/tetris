@@ -28,7 +28,7 @@ class Game {
         for (let i = 0; i < this.rows; i++) {
             this.placePices.counts[i] = 0;
         }
-        
+
         this.pice = null;
 
         this.#setNewPice();
@@ -38,9 +38,9 @@ class Game {
     #setNewPice() {
         this.pice = new Pice({
             ctx: this.ctx,
-            x: Math.rnd(2, this.cols - 6, true),
-            y: -pattern[0][0].length,
-            scale: this.scale, vx: this.scale / 5,
+            x: Math.rnd(4, this.cols - 6, true),
+            y: -Math.round(pattern[0][0].length / 2),
+            scale: this.scale,
             game: this, vy: 1
         });
     }
@@ -75,13 +75,15 @@ class Game {
 
     #moveLeft() {
         if (this.pice.leftIsEmpty()) {
-            this.pice.points.map(point => point.tx--);
+            this.pice.tx--;
+            this.pice.vx = -1;
         }
     }
 
     #moveRight() {
         if (this.pice.rightIsEmpty()) {
-            this.pice.points.map(point => point.tx++);
+            this.pice.tx++;
+            this.pice.vx = 1;
         }
     }
 
