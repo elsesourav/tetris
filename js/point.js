@@ -1,54 +1,99 @@
 class Point {
-    constructor({ x, y, size, ctx, color }) {
-        this.x = x;
-        this.y = y;
-        this.a = Math.atan2(y, x);
-        this.d = Math.sqrt(x*x + y*y)
-        this.piceX = 0;
-        this.piceY = 0;
-        this.angle = 0;
-        this.vx = 0;
-        this.vy = 1;
-        this.dy = 0;
-        this.ty = this.y + 1;
+    constructor({ x, y, size, ctx, color, pice }) {
         this.size = size;
         this.ctx = ctx;
         this.color = color;
+        this.x = pice.x;
+        this.y = pice.y;
+        this.ofx = x; // offset x
+        this.ofy = y; // offset y
+        this.a = 0; // angle
+
+        this.tx = this.x; // target x
+        this.ty = this.y; // target y
+        this.ta = this.a; // target angle
+        this.tofx = this.ofx; // target ofset x
+        this.tofy = this.ofy; // target ofset y
+        this.vx = 0.1;  // velocity x
+        this.vy = 0.1; // velocity y
+        this.va = 1; // velocity angle
+
+
+        this.isFixed = false;
+        this.ofa = Math.atan2(this.ofy, this.ofx); // ofset rotation angle
+        this.d = Math.sqrt(this.ofy * this.ofy + this.ofx * this.ofx); // distance
+
+        this.speed = 3;
+
+        // rectangle center destence
+        this.rcd = Math.round(Math.sqrt(
+            (this.size / 2) ** 2 + (this.size / 2) ** 2));
     }
 
     update() {
-        if (this.ty != this.y) {
-            this.dy = (this.dy + this.vy) % this.size;
-            if (!this.dy) {
-                this.y = this.ty;
+
+        // for move y
+        if (this.y != this.ty) {
+            this.y = parseFloat((this.vy + this.y).toFixed(2));
+        } else if (!this.isFixed) {
+            this.ty++;
+            this.y = parseFloat((this.vy + this.y).toFixed(2));
+        }
+
+        // for move x
+        if (this.x != this.tx) {
+            for (let i = 0; i < this.speed; i++) {
+                this.x = parseFloat((this.vx + this.x).toFixed(2));
+                if (this.tx == this.x) break;
             }
         }
+
+        // for rotation
+        if (this.a != this.ta) {
+            for (let i = 0; i < this.speed * 8; i++) {
+                this.a = (this.a + this.va) % 360;
+
+                if (this.a == this.ta) break;
+            }
+        }
+
+    }
+
+    #getRectCos(angle) {
+        return this.size * 0.5 + this.rcd * Math.cos(Math.toRad(this.a + angle));
+    }
+
+    #getRectSin(angle) {
+        return this.size * 0.5 + this.rcd * Math.sin(Math.toRad(this.a + angle));
     }
 
     draw() {
-        const { piceX, piceY, x, y, d, a, dy, size, ctx } = this;
-        // console.log(x, y);
-        const s = Math.sin(Math.toRad(this.angle) + a);
-        const c = Math.cos(Math.toRad(this.angle) + a);
+        const { x, y, d, ofa, size, a, ctx } = this;
+        const cos = size * x + Math.cos(Math.toRad(a) + ofa) * size * d;
+        const sin = size * y + Math.sin(Math.toRad(a) + ofa) * size * d;
+
 
         ctx.fillStyle = this.color;
-        ctx.fillRect(
-            piceX + d * size * c,
-            piceY + d * size * s + dy,
-            size,
-            size
-        );
-
-        // draw point border 
+        ctx.strokeStyle = "#f0f"
+        ctx.lineWidth = 1
         ctx.beginPath();
-        ctx.strokeStyle = "#0ff";
-        ctx.lineWidth = 1;
-        ctx.moveTo(piceX + d * size * c, piceY + d * size * s + dy);
-        ctx.lineTo(piceX + d * size * c + size, piceY + d * size * s + dy);
-        ctx.lineTo(piceX + d * size * c + size, piceY + d * size * s + size + dy);
-        ctx.lineTo(piceX + d * size * c, piceY + d * size * s + size + dy);
+
+        ctx.moveTo(cos + this.#getRectCos(225),
+            sin + this.#getRectSin(225));
+
+        ctx.lineTo(cos + this.#getRectCos(315),
+            sin + this.#getRectSin(315));
+
+        ctx.lineTo(cos + this.#getRectCos(45),
+            sin + this.#getRectSin(45));
+
+        ctx.lineTo(cos + this.#getRectCos(135),
+            sin + this.#getRectSin(135));
+
         ctx.closePath();
-        ctx.stroke();
+        ctx.fill();
+        ctx.stroke()
+
     }
 
 }

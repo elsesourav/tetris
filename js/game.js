@@ -2,7 +2,7 @@
 class Game {
     constructor(contaner, width, animation) {
         this.rows = 30;
-        this.cols = 15;
+        this.cols = 15; 
         this.scale = Math.floor(width / this.cols);
 
         this.width = this.cols * this.scale;
@@ -20,13 +20,10 @@ class Game {
         this.ctx.fillStyle = `#000`;
         this.ctx.fillRect(0, 0, this.width, this.height);
 
-        this.placePices = {
-            counts: [],
-            points: []
-        };
+        this.placePices = [];
 
         for (let i = 0; i < this.rows; i++) {
-            this.placePices.counts[i] = 0;
+            this.placePices[i] = [];
         }
 
         this.pice = null;
@@ -47,43 +44,67 @@ class Game {
 
     update() {
         if (this.pice.isCollusion()) {
+            // console.log("collusion");
             this.pice.save(this.placePices);
+
+            let clearIndex = [];
+            // clear line when cols are full
+            this.placePices.forEach((points, i) => {
+                if (points.length >= this.cols) {
+                    clearIndex.push(i);
+                    this.placePices[i] = [];
+
+                    for (let j = 0; j < i; j++) {
+                        const points = this.placePices[j];
+                        points.map(point => point.ty++);
+                    }
+                }
+            });
+            clearIndex.forEach(ci => {
+                this.placePices.splice(ci, 1);
+                this.placePices.unshift([]);
+            })
+            
             this.#setNewPice();
-            this.ctx.fillStyle = `#0007`;
-            this.ctx.fillRect(0, 0, this.width, this.height);
-        } else {
-            this.pice.update();
         }
+
+        this.pice.update();
     }
 
     draw() {
-        const { ctx, scale } = this;
+        const { ctx } = this;
 
         ctx.fillStyle = `#000`
         // ctx.fillStyle = `#000${Math.round(2 / this.pice.vy * this.pice.vy * this.pice.vy)}`;
         ctx.fillRect(0, 0, this.width, this.height);
         this.pice.draw();
-        this.placePices.points.forEach(point => {
-            point.update();
-            point.draw();
-        });
     }
 
     #rotatePices() {
-        this.pice.rotate();
+        if (this.pice.rotateIsPossible()) {
+            this.pice.rotate();
+        }
     }
 
     #moveLeft() {
         if (this.pice.leftIsEmpty()) {
-            this.pice.tx--;
-            this.pice.vx = -1;
+            const vx = Math.abs(this.pice.points[0].vx) * -1;
+
+            this.pice.points.forEach(point => {
+                point.tx--;
+                point.vx = vx;
+            })
         }
     }
 
     #moveRight() {
         if (this.pice.rightIsEmpty()) {
-            this.pice.tx++;
-            this.pice.vx = 1;
+            const vx = Math.abs(this.pice.points[0].vx);
+
+            this.pice.points.forEach(point => {
+                point.tx++;
+                point.vx = vx;
+            })
         }
     }
 
