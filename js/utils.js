@@ -29,6 +29,8 @@ class Animation {
     constructor(fps) {
         this.fps = fps;
         this.run = false;
+        this.fun;
+        this.unUsed = false;
     }
 
     animate(fun) {
@@ -40,13 +42,21 @@ class Animation {
         }, 1000 / this.fps);
     }
 
-    start(fun) {
-        this.run = true;
-        this.animate(fun);
+    ready(fun) {
+        this.fun = fun;
+    }
+
+    start() {
+        if (!this.unUsed) {
+            this.unUsed = true;
+            this.run = true;
+            this.animate(this.fun);
+        }
     }
 
     stop() {
         this.run = false;
+        this.unUsed = false;
     }
 }
 

@@ -18,6 +18,7 @@ class Game {
         contaner.appendChild(this.canvas);
 
         this.ctx.fillStyle = `#000`;
+        this.ctx.lineWidth = 5;
         this.ctx.fillRect(0, 0, this.width, this.height);
 
         this.placePices = [];
@@ -88,23 +89,13 @@ class Game {
 
     #moveLeft() {
         if (this.pice.leftIsEmpty()) {
-            const vx = Math.abs(this.pice.points[0].vx) * -1;
-
-            this.pice.points.forEach(point => {
-                point.tx--;
-                point.vx = vx;
-            })
+            this.pice.updateVX(-1);
         }
     }
 
     #moveRight() {
         if (this.pice.rightIsEmpty()) {
-            const vx = Math.abs(this.pice.points[0].vx);
-
-            this.pice.points.forEach(point => {
-                point.tx++;
-                point.vx = vx;
-            })
+            this.pice.updateVX(1);
         }
     }
 

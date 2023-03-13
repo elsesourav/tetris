@@ -11,6 +11,7 @@ class Pice {
         this.points = [];
         this.color = `hsl(${Math.round(Math.random() * 360)}, 100%, 50%)`
         this.#setPoint();
+        this.updateTouchPice();
     }
 
     #setPoint(index = this.ci) {
@@ -23,7 +24,8 @@ class Pice {
                     ctx: this.ctx,
                     pice: this,
                     size: this.size,
-                    color: this.color
+                    color: this.color,
+                    game: this.game
                 }));
             }
             )
@@ -42,6 +44,42 @@ class Pice {
         );
     }
 
+    updateTouchPice() {
+
+        let i = -1;
+        let IS = false;
+        let magicY = 0;
+
+        // calculate the points ty -> placePoints ty (set into magicY)
+        while (++i < this.game.rows && !IS) {
+            IS = this.points.some(point =>
+                this.game.placePices.some(points =>
+                    points.some(p => {
+                        if (point.tx + point.tofx == p.tx + p.tofx &&
+                            i + point.tofy == p.ty + p.tofy) {
+                            magicY = i - 1;
+                            return true;
+                        }
+                    })
+                )
+            )
+        }
+        if (!IS) {
+            for (let i = this.game.rows - 1; i >= 0; i--) {
+                if (!this.points.some(point => {
+                    if (i + point.tofy == this.game.rows - 1) {
+                        magicY = i;
+                        return true;
+                    }
+                })) break;
+            }
+        }
+
+        this.points.forEach(point => {
+            point.magicY = magicY;
+        })
+    }
+
     update() {
         this.points.forEach(point => {
             point.update();
@@ -55,7 +93,19 @@ class Pice {
 
     }
 
-    /* ---- check collusion detection ---- */
+    updateVX(delX) {
+        const vx = delX > 0 ? Math.abs(this.points[0].vx) :
+            Math.abs(this.points[0].vx) * -1;
+
+        this.points.forEach(point => {
+            point.tx += delX;
+            point.vx = vx;
+        })
+
+        this.updateTouchPice();
+    }
+
+    // check collusion detection 
     isCollusion() {
         // collusion in ground
         return this.points.some(point =>
@@ -71,13 +121,13 @@ class Pice {
         );
     }
 
-/*____ rotation formula _____
-    [ x, y ] deg [ update x = y * -1 and y = x ]
-    [ 1, -2] 0
-    [ 2,  1] 90
-    [-1,  2] 180
-    [-2, -1] 270              */
     rotateIsPossible() {
+        /*____ rotation formula _____
+            [ x, y ] deg [ update x = y * -1 and y = x ]
+            [ 1, -2] 0
+            [ 2,  1] 90
+            [-1,  2] 180
+            [-2, -1] 270              */
         let collusionBund = false;
 
         const is = !this.points.some(point => {
@@ -104,18 +154,9 @@ class Pice {
             let max = Math.max(...oneArray) - this.game.cols + 1;
             let min = Math.min(...oneArray);
 
-            if (max > 0) {
-                this.points.forEach(p => {
-                    p.tx -= max;
-                    p.vx = Math.abs(p.vx) * -1;
-                });
-            } else {
-                this.points.forEach(p => {
-                    p.tx -= min;
-                    p.vx = Math.abs(p.vx);
-                });
-            }
-            
+            if (max > 0) this.updateVX(-max);
+            else this.updateVX(-min);
+
             return true;
         }
 
@@ -158,6 +199,7 @@ class Pice {
             // swap values for variables "p.x" and "p.y"
             p.tofy = [p.tofx, p.tofx = p.tofy * -1][0];
         });
+        this.updateTouchPice();
     }
 
     // save point in place points array
